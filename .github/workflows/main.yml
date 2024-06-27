@@ -24,4 +24,4 @@ jobs:
           python3 bot.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
+          CHAT_ID: ${{ secrets.TELEGRAM_ID }}
