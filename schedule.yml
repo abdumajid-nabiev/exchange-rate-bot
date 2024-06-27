@@ -22,7 +22,7 @@ jobs:
           pip install requests python-telegram-bot
       - name: Run script
         run: |
-          python bot.py
+          python3 bot.py
         env:
           BOT_TOKEN: ${{ secrets.1974949313:AAGAqJpXAz7CRueHjdRiObjZ_-3W23VY5do }}
           CHAT_ID: ${{ secrets.-1001861433470 }}
