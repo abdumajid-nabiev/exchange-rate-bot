@@ -193,7 +193,7 @@ def format_rates_message(rates: dict) -> str:
     for code, name in currency_map.items():
         rate = rates.get(code, 0)
         lines.append(f"1 {name} = {rate:.2f} UZS")
-    lines.append("\n✅ @NimaUchun_N1 - Obuna bo‘ling!")
+    lines.append("\n🌟 @markaziy_bank_rates - Obuna bo‘ling!")
     return "\n".join(lines)
 
 
