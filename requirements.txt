@@ -1,5 +1,7 @@
-python-telegram-bot==13.7.*
-requests
-
 urllib3==1.26.7
+python-telegram-bot==20.3
+requests
+matplotlib
+python-dotenv
+tzdata
 
