@@ -40,6 +40,9 @@ currency_to_country = {
 }
 
 
+async def after_startup(app):
+    print("Bot has started.")
+
 # --- Fetching Exchange Rates --- #
 def fetch_exchange_rates():
     url = "https://cbu.uz/uzc/arkhiv-kursov-valyut/json/"
@@ -283,8 +286,8 @@ def main():
     application = (
     Application.builder()
     .token(BOT_TOKEN)
-    .rate_limiter(AIORateLimiter())  # Required for async job queue to work
-    .post_init(True)
+    .rate_limiter(AIORateLimiter())
+    .post_init(after_startup)
     .build()
 )
     application.job_queue.run_daily(
