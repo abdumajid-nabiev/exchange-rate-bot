@@ -18,6 +18,8 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN") or "1974949313:AAGAqJpXAz7CRueHjdRiObjZ_-3W23VY5do"
 CHAT_ID = os.getenv("CHAT_ID") or "1001861433470"
+ADMIN_ID = 691728393  # Your Telegram user ID
+
 DB_PATH = "rates.db"
 flags_dir = "flags"
 
@@ -247,6 +249,35 @@ async def check_rates(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_photo(photo=photo, caption=message)
 
 
+async def send_rates_to_channel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("⛔ Sizda bu buyruqni ishlatishga ruxsat yo‘q.")
+        return
+
+    rates = fetch_exchange_rates()
+    if not rates:
+        await update.message.reply_text("❌ Valyuta kurslarini olishda xatolik yuz berdi.")
+        return
+
+    store_rates(rates)
+    message = format_rates_message(rates)
+
+    ccy_list = ["USD", "EUR", "GBP", "RUB", "CNY", "KRW", "TRY", "TMT", "KZT", "TJS", "KGS", "AED"]
+    currency_names = {
+        "USD": "🇺🇸 Dollar", "EUR": "🇪🇺 Yevro", "GBP": "🇬🇧 Funt", "RUB": "🇷🇺 Rubl",
+        "CNY": "🇨🇳 Yuan", "KRW": "🇰🇷 Von", "TRY": "🇹🇷 Lira", "TMT": "🇹🇲 Manat",
+        "KZT": "🇰🇿 Tenge", "TJS": "🇹🇯 Somoni", "KGS": "🇰🇬 Som", "AED": "🇦🇪 Dirham"
+    }
+
+    image_path = generate_currency_ranking_chart(rates, ccy_list, currency_names)
+
+    try:
+        await context.bot.send_photo(chat_id=CHAT_ID, photo=open(image_path, 'rb'), caption=message)
+        await update.message.reply_text("✅ Kurslar kanalga yuborildi.")
+    except Exception as e:
+        await update.message.reply_text(f"❌ Xatolik: {e}")
+
+
 # --- Main Entry --- #
 def main():
     application = (
@@ -261,6 +292,7 @@ def main():
     time=time(hour=5, minute=0, second=0, tzinfo=ZoneInfo("Asia/Tashkent"))
 )
     application.add_handler(CommandHandler("rates", check_rates))
+    application.add_handler(CommandHandler("send_rates", send_rates_to_channel))
     application.run_polling()
 
 
