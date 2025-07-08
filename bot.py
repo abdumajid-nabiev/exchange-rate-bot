@@ -17,7 +17,7 @@ from telegram.ext import Application, AIORateLimiter
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN") or "1974949313:AAGAqJpXAz7CRueHjdRiObjZ_-3W23VY5do"
-CHAT_ID = os.getenv("CHAT_ID") or "1001861433470"
+CHAT_ID = os.getenv("CHAT_ID") or "-1001861433470"
 ADMIN_ID = 691728393  # Your Telegram user ID
 
 DB_PATH = "rates.db"
