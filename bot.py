@@ -12,6 +12,7 @@ from telegram.ext import (
     Application, CommandHandler, ContextTypes
 )
 from dotenv import load_dotenv
+from telegram.ext import Application, AIORateLimiter
 
 load_dotenv()
 
@@ -248,12 +249,17 @@ async def check_rates(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # --- Main Entry --- #
 def main():
-    application = Application.builder().token(BOT_TOKEN).build()
-    job_queue = application.job_queue
-    job_queue.run_daily(
-        send_daily_rates,
-        time=time(hour=5, minute=0, second=0, tzinfo=ZoneInfo("Asia/Tashkent"))
-    )
+    application = (
+    Application.builder()
+    .token(BOT_TOKEN)
+    .rate_limiter(AIORateLimiter())  # Required for async job queue to work
+    .post_init(True)
+    .build()
+)
+    application.job_queue.run_daily(
+    send_daily_rates,
+    time=time(hour=5, minute=0, second=0, tzinfo=ZoneInfo("Asia/Tashkent"))
+)
     application.add_handler(CommandHandler("rates", check_rates))
     application.run_polling()
 
