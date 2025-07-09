@@ -285,6 +285,27 @@ async def send_rates_to_channel(update: Update, context: ContextTypes.DEFAULT_TY
     except Exception as e:
         await update.message.reply_text(f"❌ Xatolik: {e}")
 
+def store_rates(rates: dict):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS rates (
+            date TEXT, ccy TEXT, rate REAL,
+            PRIMARY KEY (date, ccy)
+        )
+    """)
+    today = datetime.now(ZoneInfo("Asia/Tashkent")).date().isoformat()
+    for ccy, rate in rates.items():
+        c.execute("REPLACE INTO rates (date, ccy, rate) VALUES (?, ?, ?)", (today, ccy, rate))
+
+    # 🔥 Cleanup old records older than 30 days (safe)
+    cutoff = (datetime.now(ZoneInfo("Asia/Tashkent")) - timedelta(days=30)).date().isoformat()
+    c.execute("DELETE FROM rates WHERE date < ?", (cutoff,))
+
+    conn.commit()
+    conn.close()
+
+
 
 # --- Main Entry --- #
 def main():
