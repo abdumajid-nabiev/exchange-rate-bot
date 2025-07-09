@@ -214,8 +214,13 @@ async def send_daily_rates(context: ContextTypes.DEFAULT_TYPE):
     message = format_rates_message(rates)
 
     ccy_list = list(currency_to_country.keys())
-    history = load_rate_history(ccy_list)
-    image_path = generate_weekly_bar_chart(history)
+    currency_names = {
+        "USD": "🇺🇸 Dollar", "EUR": "🇪🇺 Yevro", "GBP": "🇬🇧 Funt", "RUB": "🇷🇺 Rubl",
+        "CNY": "🇨🇳 Yuan", "KRW": "🇰🇷 Von", "TRY": "🇹🇷 Lira", "TMT": "🇹🇲 Manat",
+        "KZT": "🇰🇿 Tenge", "TJS": "🇹🇯 Somoni", "KGS": "🇰🇬 Som", "AED": "🇦🇪 Dirham"
+    }
+
+    image_path = generate_currency_ranking_chart(rates, ccy_list, currency_names)
 
     with open(image_path, 'rb') as photo:
         await context.bot.send_photo(chat_id=CHAT_ID, photo=photo, caption=message)
