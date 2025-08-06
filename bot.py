@@ -542,7 +542,7 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
     # 3. Force Unicode font
     plt.rcParams['font.family'] = 'DejaVu Sans'
 
-    # 4. Plot
+    # 4. Plot setup
     fig, ax = plt.subplots(figsize=(12, 7))
     colors = plt.get_cmap('tab20').colors
     bars = ax.barh(labels, values, color=[colors[i % len(colors)] for i in range(len(values))])
@@ -552,28 +552,53 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
     ax.invert_yaxis()
     ax.grid(axis='x', linestyle='--', alpha=0.3)
 
-    # 5. Draw flags and annotate values
+    # 5. Draw flags and annotate values with auto‐scaled zoom
     maxv = max(values)
     margin = maxv * 0.15
     ax.set_xlim(-margin, maxv * 1.15)
+
+    # Precompute renderer and axis bounds once
+    renderer = fig.canvas.get_renderer()
+    bbox = ax.get_window_extent(renderer=renderer)
+    axis_height_px = bbox.height
+    data_height = ax.get_ylim()[1] - ax.get_ylim()[0]
+    px_per_data_unit = axis_height_px / data_height
+
     for bar, val, ccy in zip(bars, values, codes):
         y = bar.get_y() + bar.get_height() / 2
-        # Flag image
+
+        # Auto-scale flag
         flag_code = CURRENCY_TO_COUNTRY.get(ccy)
         if flag_code:
             fp = os.path.join(FLAGS_DIR, f'{flag_code}.png')
             if os.path.isfile(fp):
                 try:
                     img = mpimg.imread(fp)
-                    box = OffsetImage(img, zoom=0.23)
-                    ab = AnnotationBbox(box, (-margin*0.3, y), frameon=False, box_alignment=(0.3, 0.3))
+                    img_h = img.shape[0]  # pixel height
+                    # Target flag height = 80% of bar thickness in data units
+                    target_data_h = bar.get_height() * 0.8
+                    target_px_h = target_data_h * px_per_data_unit
+                    zoom = target_px_h / img_h
+                    box = OffsetImage(img, zoom=zoom)
+                    ab = AnnotationBbox(
+                        box,
+                        (-margin * 0.3, y),
+                        frameon=False,
+                        box_alignment=(0.3, 0.5)
+                    )
                     ax.add_artist(ab)
-                except:
+                except Exception:
                     pass
+
         # Value label
-        ha, x = ('left', val + maxv*0.01) if val < maxv*1.5 else ('right', val - maxv*0.10)
-        color = 'black' if val < maxv*1.5 else 'white'
-        ax.text(x, y, f'{val:,.2f} UZS', va='center', ha=ha, fontsize=10, color=color, fontweight='bold')
+        ha, x = ('left', val + maxv * 0.01) if val < maxv * 1.5 else ('right', val - maxv * 0.10)
+        color = 'black' if val < maxv * 1.5 else 'white'
+        ax.text(
+            x, y,
+            f'{val:,.2f} UZS',
+            va='center', ha=ha,
+            fontsize=10, color=color, fontweight='bold'
+        )
 
     plt.tight_layout()
     out = 'currency_ranking.png'
