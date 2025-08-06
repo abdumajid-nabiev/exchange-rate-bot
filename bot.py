@@ -530,48 +530,57 @@ def load_rate_history(ccys: list[str], days: int = 7) -> dict[str, list[tuple[st
 # ─── Visualization ───────────────────────────────────────────────────────────────
 
 def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
-    # Pair up
+    # Prepare data
     data = sorted(
         [(rates.get(ccy, 0), CURRENCY_NAMES[ccy], ccy) for ccy in ccys],
         reverse=True
     )
     values, labels, codes = zip(*data)
 
-    fig, ax = plt.subplots(figsize=(12,7))
-    colors = plt.get_cmap("tab20").colors
-    bars = ax.barh(labels, values, color=[colors[i % len(colors)] for i,_ in enumerate(values)])
+    # Set font to DejaVu Sans (Unicode-compatible)
+    plt.rcParams["font.family"] = "DejaVu Sans"
 
-    ax.set_xlabel("UZS")
-    ax.set_title("💰 Bugungi valyuta kurslari (To‘liq ma’lumot bilan)")
+    fig, ax = plt.subplots(figsize=(12, 7))
+    colors = plt.get_cmap("tab20").colors
+    bars = ax.barh(labels, values, color=[colors[i % len(colors)] for i, _ in enumerate(values)])
+
+    ax.set_xlabel("UZS", fontsize=12, fontweight="bold")
+    ax.set_title("💰 Bugungi valyuta kurslari", fontsize=14, fontweight="bold")
 
     maxv = max(values)
     margin = maxv * 0.15
     ax.set_xlim(-margin, maxv * 1.15)
 
     for bar, val, ccy in zip(bars, values, codes):
-        y = bar.get_y() + bar.get_height()/2
-        # Draw flag
-        code = CURRENCY_TO_COUNTRY.get(ccy, None)
+        y = bar.get_y() + bar.get_height() / 2
+        code = CURRENCY_TO_COUNTRY.get(ccy)
+
+        # Flag rendering
         if code:
             fp = os.path.join(FLAGS_DIR, f"{code}.png")
             if os.path.isfile(fp):
                 try:
                     img = mpimg.imread(fp)
                     box = OffsetImage(img, zoom=0.23)
-                    ab  = AnnotationBbox(box, (-margin*0.3, y), frameon=False, box_alignment=(0.3,0.3))
+                    ab = AnnotationBbox(box, (-margin * 0.3, y), frameon=False, box_alignment=(0.3, 0.3))
                     ax.add_artist(ab)
                 except Exception as e:
                     print("🚩 Flag load failed:", ccy, e)
-        # Value label
-        text_x = val - maxv*0.10 if val > maxv*1.5 else val + maxv*0.01
-        ha = "right" if val > maxv*1.5 else "left"
-        color = "white" if val > maxv*1.5 else "black"
-        ax.text(text_x, y, f"{val:,.2f} UZS", va="center", ha=ha, fontsize=11, color=color, fontweight="bold")
 
+        # Value label
+        text_x = val - maxv * 0.10 if val > maxv * 1.5 else val + maxv * 0.01
+        ha = "right" if val > maxv * 1.5 else "left"
+        color = "white" if val > maxv * 1.5 else "black"
+        ax.text(
+            text_x, y, f"{val:,.2f} UZS",
+            va="center", ha=ha, fontsize=10, color=color, fontweight="bold"
+        )
+
+    ax.tick_params(axis='y', labelsize=10)
     ax.invert_yaxis()
     plt.tight_layout()
     out = "currency_ranking.png"
-    plt.savefig(out)
+    plt.savefig(out, dpi=300)
     plt.close()
     return out
 
