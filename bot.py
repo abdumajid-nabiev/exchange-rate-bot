@@ -535,7 +535,12 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
         [(rates.get(ccy, 0), CURRENCY_NAMES[ccy], ccy) for ccy in ccys],
         reverse=True
     )
-    values, labels, codes = zip(*data)
+    # values, labels, codes = zip(*data)
+    import re
+
+def strip_emoji(text):
+    return re.sub(r'[^\w\s,.–-]', '', text)
+    labels = [strip_emoji(label) for label in labels]
 
     # Set font to DejaVu Sans (Unicode-compatible)
     plt.rcParams["font.family"] = "DejaVu Sans"
