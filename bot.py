@@ -579,58 +579,67 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
 
 # ─── Messaging ─────────────────────────────────────────────────────────────────
 
-def format_rates_message(rates: dict) -> str:
-    # Localized currency names + emoji
-    currency_names = {
-        "USD": "🇺🇸 AQSh dollari",
-        "EUR": "🇪🇺 Yevro",
-        "GBP": "🇬🇧 Britaniya funti",
-        "CNY": "🇨🇳 Xitoy yuani",
-        "JPY": "🇯🇵 Yapon yeni",
-        "CHF": "🇨🇭 Shveysariya franki",
-        "KRW": "🇰🇷 Janubiy Koreya voni",
-        "RUB": "🇷🇺 Rossiya rubli",
+# def format_rates_message(rates: dict) -> str:
+#     # Localized currency names + emoji
+#     currency_names = {
+#         "USD": "🇺🇸 AQSh dollari",
+#         "EUR": "🇪🇺 Yevro",
+#         "GBP": "🇬🇧 Britaniya funti",
+#         "CNY": "🇨🇳 Xitoy yuani",
+#         "JPY": "🇯🇵 Yapon yeni",
+#         "CHF": "🇨🇭 Shveysariya franki",
+#         "KRW": "🇰🇷 Janubiy Koreya voni",
+#         "RUB": "🇷🇺 Rossiya rubli",
 
-        "KZT": "🇰🇿 Qozog‘iston tengesi",
-        "KGS": "🇰🇬 Qirg‘iziston somi",
-        "TJS": "🇹🇯 Tojikiston somonisi",
-        "TMT": "🇹🇲 Turkmaniston manati",
-        "AFN": "🇦🇫 Afg‘on afg‘onisi",
+#         "KZT": "🇰🇿 Qozog‘iston tengesi",
+#         "KGS": "🇰🇬 Qirg‘iziston somi",
+#         "TJS": "🇹🇯 Tojikiston somonisi",
+#         "TMT": "🇹🇲 Turkmaniston manati",
+#         "AFN": "🇦🇫 Afg‘on afg‘onisi",
 
-        "SAR": "🇸🇦 Saudiya riyoli",
-        "AED": "🇦🇪 BAA dirhami",
-        "QAR": "🇶🇦 Qatar riyoli",
-        "TRY": "🇹🇷 Turkiya Lira",
-        "IQD": "🇮🇶 Iroq dinori",
-        "IRR": "🇮🇷 Eron riali",
-        "BHD": "🇧🇭 Bahrayn dinori",
-        "KWD": "🇰🇼 Quvayt dinori",
-    }
+#         "SAR": "🇸🇦 Saudiya riyoli",
+#         "AED": "🇦🇪 BAA dirhami",
+#         "QAR": "🇶🇦 Qatar riyoli",
+#         "TRY": "🇹🇷 Turkiya Lira",
+#         "IQD": "🇮🇶 Iroq dinori",
+#         "IRR": "🇮🇷 Eron riali",
+#         "BHD": "🇧🇭 Bahrayn dinori",
+#         "KWD": "🇰🇼 Quvayt dinori",
+#     }
 
-    def format_line(code: str) -> str:
-        name = CURRENCY_NAMES.get(code)
-        rate = rates.get(code)
-        if not name or rate is None:
-            return ""
-        display_rate = rate if rate >= 1 else round(rate, 4)
-        formatted_rate = f"{display_rate:.2f}" if display_rate >= 1 else f"{display_rate:.4f}"
-        return f"1 {name.split()[0]} {name.split(' ', 1)[1]} = {formatted_rate} UZS"
+    def format_rates_message(rates: dict) -> str:
+    def format_rate(rate: float) -> str:
+        return (
+            f"{rate:,.2f}".replace(",", " ") if rate >= 1
+            else f"{rate:.4f}"
+        )
+
+    def format_block(ccy_list: list[str]) -> str:
+        lines = []
+        for code in ccy_list:
+            rate = rates.get(code)
+            name = CURRENCY_NAMES.get(code)
+            if rate is None or name is None:
+                continue
+            formatted = format_rate(rate)
+            lines.append(f"{name} = {formatted} UZS")
+        return "\n".join(lines)
 
     major = ["USD", "EUR", "GBP", "CNY", "JPY", "CHF", "KRW", "RUB"]
     regional = ["KZT", "KGS", "TJS", "TMT", "AFN"]
     gulf = ["SAR", "AED", "QAR", "TRY", "IQD", "IRR", "BHD", "KWD"]
 
-    lines = []
-    for group in [major, regional, gulf]:
-        for code in group:
-            line = format_line(code)
-            if line:
-                lines.append(line)
-
-    lines.append("")  # spacing
-    lines.append("🏦 @markaziy_bank_rates")
-    lines.append(f"🏛 Markaziy Bank sanasi: {datetime.now(ZoneInfo('Asia/Tashkent')).strftime('%Y.%m.%d')}")
-    return "\n".join(lines)
+    parts = [
+        format_block(major),
+        "",
+        format_block(regional),
+        "",
+        format_block(gulf),
+        "",
+        "🏦 @markaziy_bank_rates",
+        f"🏛 Markaziy Bank sanasi: {datetime.now(TZ).strftime('%Y.%m.%d')}"
+    ]
+    return "\n".join(parts)
 
 
 async def send_daily_rates(context: ContextTypes.DEFAULT_TYPE):
