@@ -528,66 +528,59 @@ def load_rate_history(ccys: list[str], days: int = 7) -> dict[str, list[tuple[st
 
 
 # ─── Visualization ───────────────────────────────────────────────────────────────
-
 def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
-    # Prepare data
-    data = sorted(
-        [(rates.get(ccy, 0), CURRENCY_NAMES[ccy], ccy) for ccy in ccys],
-        reverse=True
-    )
-    # values, labels, codes = zip(*data)
     import re
+    # 1. Prepare data
+    data = sorted([(rates.get(c, 0), CURRENCY_NAMES[c], c) for c in ccys], reverse=True)
+    values, labels, codes = zip(*data)
 
-def strip_emoji(text):
-    return re.sub(r'[^\w\s,.–-]', '', text)
-    labels = [strip_emoji(label) for label in labels]
+    # 2. Strip out any emojis so matplotlib can render properly
+    def strip_emoji(txt: str) -> str:
+        return re.sub(r'[^\w\s,.–-]', '', txt)
+    labels = [strip_emoji(lbl) for lbl in labels]
 
-    # Set font to DejaVu Sans (Unicode-compatible)
-    plt.rcParams["font.family"] = "DejaVu Sans"
+    # 3. Force Unicode font
+    plt.rcParams['font.family'] = 'DejaVu Sans'
 
+    # 4. Plot
     fig, ax = plt.subplots(figsize=(12, 7))
-    colors = plt.get_cmap("tab20").colors
-    bars = ax.barh(labels, values, color=[colors[i % len(colors)] for i, _ in enumerate(values)])
+    colors = plt.get_cmap('tab20').colors
+    bars = ax.barh(labels, values, color=[colors[i % len(colors)] for i in range(len(values))])
 
-    ax.set_xlabel("UZS", fontsize=12, fontweight="bold")
-    ax.set_title("💰 Bugungi valyuta kurslari", fontsize=14, fontweight="bold")
+    ax.set_xlabel('UZS', fontsize=12, fontweight='bold')
+    ax.set_title('💰 Bugungi valyuta kurslari', fontsize=14, fontweight='bold')
+    ax.invert_yaxis()
+    ax.grid(axis='x', linestyle='--', alpha=0.3)
 
+    # 5. Draw flags and annotate values
     maxv = max(values)
     margin = maxv * 0.15
     ax.set_xlim(-margin, maxv * 1.15)
-
     for bar, val, ccy in zip(bars, values, codes):
         y = bar.get_y() + bar.get_height() / 2
-        code = CURRENCY_TO_COUNTRY.get(ccy)
-
-        # Flag rendering
-        if code:
-            fp = os.path.join(FLAGS_DIR, f"{code}.png")
+        # Flag image
+        flag_code = CURRENCY_TO_COUNTRY.get(ccy)
+        if flag_code:
+            fp = os.path.join(FLAGS_DIR, f'{flag_code}.png')
             if os.path.isfile(fp):
                 try:
                     img = mpimg.imread(fp)
                     box = OffsetImage(img, zoom=0.23)
-                    ab = AnnotationBbox(box, (-margin * 0.3, y), frameon=False, box_alignment=(0.3, 0.3))
+                    ab = AnnotationBbox(box, (-margin*0.3, y), frameon=False, box_alignment=(0.3, 0.3))
                     ax.add_artist(ab)
-                except Exception as e:
-                    print("🚩 Flag load failed:", ccy, e)
-
+                except:
+                    pass
         # Value label
-        text_x = val - maxv * 0.10 if val > maxv * 1.5 else val + maxv * 0.01
-        ha = "right" if val > maxv * 1.5 else "left"
-        color = "white" if val > maxv * 1.5 else "black"
-        ax.text(
-            text_x, y, f"{val:,.2f} UZS",
-            va="center", ha=ha, fontsize=10, color=color, fontweight="bold"
-        )
+        ha, x = ('left', val + maxv*0.01) if val < maxv*1.5 else ('right', val - maxv*0.10)
+        color = 'black' if val < maxv*1.5 else 'white'
+        ax.text(x, y, f'{val:,.2f} UZS', va='center', ha=ha, fontsize=10, color=color, fontweight='bold')
 
-    ax.tick_params(axis='y', labelsize=10)
-    ax.invert_yaxis()
     plt.tight_layout()
-    out = "currency_ranking.png"
+    out = 'currency_ranking.png'
     plt.savefig(out, dpi=300)
-    plt.close()
+    plt.close(fig)
     return out
+
 
 
 
