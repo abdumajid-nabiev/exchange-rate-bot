@@ -577,37 +577,8 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
     return out
 
 
-# ─── Messaging ─────────────────────────────────────────────────────────────────
 
-# def format_rates_message(rates: dict) -> str:
-#     # Localized currency names + emoji
-#     currency_names = {
-#         "USD": "🇺🇸 AQSh dollari",
-#         "EUR": "🇪🇺 Yevro",
-#         "GBP": "🇬🇧 Britaniya funti",
-#         "CNY": "🇨🇳 Xitoy yuani",
-#         "JPY": "🇯🇵 Yapon yeni",
-#         "CHF": "🇨🇭 Shveysariya franki",
-#         "KRW": "🇰🇷 Janubiy Koreya voni",
-#         "RUB": "🇷🇺 Rossiya rubli",
-
-#         "KZT": "🇰🇿 Qozog‘iston tengesi",
-#         "KGS": "🇰🇬 Qirg‘iziston somi",
-#         "TJS": "🇹🇯 Tojikiston somonisi",
-#         "TMT": "🇹🇲 Turkmaniston manati",
-#         "AFN": "🇦🇫 Afg‘on afg‘onisi",
-
-#         "SAR": "🇸🇦 Saudiya riyoli",
-#         "AED": "🇦🇪 BAA dirhami",
-#         "QAR": "🇶🇦 Qatar riyoli",
-#         "TRY": "🇹🇷 Turkiya Lira",
-#         "IQD": "🇮🇶 Iroq dinori",
-#         "IRR": "🇮🇷 Eron riali",
-#         "BHD": "🇧🇭 Bahrayn dinori",
-#         "KWD": "🇰🇼 Quvayt dinori",
-#     }
-
-    def format_rates_message(rates: dict) -> str:
+def format_rates_message(rates: dict) -> str:
     def format_rate(rate: float) -> str:
         return (
             f"{rate:,.2f}".replace(",", " ") if rate >= 1
@@ -631,7 +602,7 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
 
     parts = [
         format_block(major),
-        "",
+        "",  # One blank line between blocks
         format_block(regional),
         "",
         format_block(gulf),
@@ -639,6 +610,7 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
         "🏦 @markaziy_bank_rates",
         f"🏛 Markaziy Bank sanasi: {datetime.now(TZ).strftime('%Y.%m.%d')}"
     ]
+
     return "\n".join(parts)
 
 
