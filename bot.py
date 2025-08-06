@@ -580,15 +580,56 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
 # ─── Messaging ─────────────────────────────────────────────────────────────────
 
 def format_rates_message(rates: dict) -> str:
-    header = f"🏛 Markaziy Bank sanasi: {datetime.now(TZ).strftime('%Y.%m.%d')}\n"
-    lines = []
-    for ccy in CCY_LIST:
-        rate = rates.get(ccy)
-        if rate is None: continue
-        # thousand separator as narrow NBSP
-        s = f"{rate:,.2f}".replace(",", "\u202F")
-        lines.append(f"{CURRENCY_NAMES[ccy]} = {s} UZS")
-    return header + "\n".join(lines) + "\n\n🏦 @markaziy_bank_rates"
+    # Localized currency names + emoji
+    currency_names = {
+        "USD": "🇺🇸 AQSh dollari",
+        "EUR": "🇪🇺 Yevro",
+        "GBP": "🇬🇧 Britaniya funti",
+        "CNY": "🇨🇳 Xitoy yuani",
+        "JPY": "🇯🇵 Yapon yeni",
+        "CHF": "🇨🇭 Shveysariya franki",
+        "KRW": "🇰🇷 Janubiy Koreya voni",
+        "RUB": "🇷🇺 Rossiya rubli",
+
+        "KZT": "🇰🇿 Qozog‘iston tengesi",
+        "KGS": "🇰🇬 Qirg‘iziston somi",
+        "TJS": "🇹🇯 Tojikiston somonisi",
+        "TMT": "🇹🇲 Turkmaniston manati",
+        "AFN": "🇦🇫 Afg‘on afg‘onisi",
+
+        "SAR": "🇸🇦 Saudiya riyoli",
+        "AED": "🇦🇪 BAA dirhami",
+        "QAR": "🇶🇦 Qatar riyoli",
+        "TRY": "🇹🇷 Turkiya Lira",
+        "IQD": "🇮🇶 Iroq dinori",
+        "IRR": "🇮🇷 Eron riali",
+        "BHD": "🇧🇭 Bahrayn dinori",
+        "KWD": "🇰🇼 Quvayt dinori",
+    }
+
+    # Define grouping order
+    major = ["USD", "EUR", "GBP", "CNY", "JPY", "CHF", "KRW", "RUB"]
+    regional = ["KZT", "KGS", "TJS", "TMT", "AFN"]
+    gulf = ["SAR", "AED", "QAR", "TRY", "IQD", "IRR", "BHD", "KWD"]
+
+    def format_group(group):
+        lines = []
+        for code in group:
+            rate = rates.get(code)
+            if rate:
+                formatted = f"{rate:,.2f}".replace(",", "\u202F")  # narrow space
+                lines.append(f"{currency_names[code]} = {formatted} UZS")
+        return "\n".join(lines)
+
+    message = (
+        f"{format_group(major)}\n\n"
+        f"{format_group(regional)}\n\n"
+        f"{format_group(gulf)}\n\n"
+        f"🏦 @markaziy_bank_rates\n"
+        f"🏛 Markaziy Bank sanasi: {datetime.now(ZoneInfo('Asia/Tashkent')).strftime('%Y.%m.%d')}"
+    )
+
+    return message
 
 
 async def send_daily_rates(context: ContextTypes.DEFAULT_TYPE):
