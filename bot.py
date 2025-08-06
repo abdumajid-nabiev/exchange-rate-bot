@@ -530,11 +530,16 @@ def load_rate_history(ccys: list[str], days: int = 7) -> dict[str, list[tuple[st
 # ─── Visualization ───────────────────────────────────────────────────────────────
 def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
     import re
+    import numpy as np
+
     # 1. Prepare data
-    data = sorted([(rates.get(c, 0), CURRENCY_NAMES[c], c) for c in ccys], reverse=True)
+    data = sorted(
+        [(rates.get(c, 0), CURRENCY_NAMES[c], c) for c in ccys],
+        reverse=True
+    )
     values, labels, codes = zip(*data)
 
-    # 2. Strip out any emojis so matplotlib can render properly
+    # 2. Strip emojis for axis labels
     def strip_emoji(txt: str) -> str:
         return re.sub(r'[^\w\s,.–-]', '', txt)
     labels = [strip_emoji(lbl) for lbl in labels]
@@ -542,25 +547,28 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
     # 3. Force Unicode font
     plt.rcParams['font.family'] = 'DejaVu Sans'
 
-    # 4. Plot setup
+    # 4. Create plot
     fig, ax = plt.subplots(figsize=(12, 7))
     colors = plt.get_cmap('tab20').colors
-    bars = ax.barh(labels, values,
-                   color=[colors[i % len(colors)] for i in range(len(values))])
+    bars = ax.barh(
+        labels,
+        values,
+        color=[colors[i % len(colors)] for i in range(len(values))]
+    )
 
     ax.set_xlabel('UZS', fontsize=12, fontweight='bold')
     ax.set_title('💰 Bugungi valyuta kurslari', fontsize=14, fontweight='bold')
     ax.invert_yaxis()
     ax.grid(axis='x', linestyle='--', alpha=0.3)
 
-    # Precompute renderer and axis bounds
+    # Precompute conversions
     renderer = fig.canvas.get_renderer()
     bbox = ax.get_window_extent(renderer=renderer)
-    axis_height_px = bbox.height
-    data_height = ax.get_ylim()[1] - ax.get_ylim()[0]
-    px_per_data_unit = axis_height_px / data_height
+    axis_h_px = bbox.height
+    data_h = ax.get_ylim()[1] - ax.get_ylim()[0]
+    px_per_unit = axis_h_px / data_h
 
-    # 5. Draw flags (auto‐scale + flip) and annotate values
+    # 5. Draw flags (auto‐scale + rotate) and annotate
     maxv = max(values)
     margin = maxv * 0.15
     ax.set_xlim(-margin, maxv * 1.15)
@@ -574,12 +582,15 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
             if os.path.isfile(fp):
                 try:
                     img = mpimg.imread(fp)
-                    # Flip vertically to correct orientation
-                    img = img[::-1, ...]
+                    # Rotate 180° to correct orientation
+                    img = np.rot90(img, 2)
                     img_h = img.shape[0]
+
+                    # Compute zoom so flag height ≈ 80% of bar thickness
                     target_data_h = bar.get_height() * 0.8
-                    target_px_h = target_data_h * px_per_data_unit
+                    target_px_h = target_data_h * px_per_unit
                     zoom = target_px_h / img_h
+
                     box = OffsetImage(img, zoom=zoom)
                     ab = AnnotationBbox(
                         box,
@@ -592,11 +603,17 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
                     pass
 
         # Value label
-        ha, x = ('left', val + maxv * 0.01) if val < maxv * 1.5 else ('right', val - maxv * 0.10)
+        ha, x = (
+            ('left', val + maxv * 0.01)
+            if val < maxv * 1.5 
+            else ('right', val - maxv * 0.10)
+        )
         color = 'black' if val < maxv * 1.5 else 'white'
         ax.text(
-            x, y, f'{val:,.2f} UZS',
-            va='center', ha=ha, fontsize=10, color=color, fontweight='bold'
+            x, y,
+            f'{val:,.2f} UZS',
+            va='center', ha=ha,
+            fontsize=10, color=color, fontweight='bold'
         )
 
     plt.tight_layout()
