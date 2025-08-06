@@ -545,37 +545,38 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
     # 4. Plot setup
     fig, ax = plt.subplots(figsize=(12, 7))
     colors = plt.get_cmap('tab20').colors
-    bars = ax.barh(labels, values, color=[colors[i % len(colors)] for i in range(len(values))])
+    bars = ax.barh(labels, values,
+                   color=[colors[i % len(colors)] for i in range(len(values))])
 
     ax.set_xlabel('UZS', fontsize=12, fontweight='bold')
     ax.set_title('💰 Bugungi valyuta kurslari', fontsize=14, fontweight='bold')
     ax.invert_yaxis()
     ax.grid(axis='x', linestyle='--', alpha=0.3)
 
-    # 5. Draw flags and annotate values with auto‐scaled zoom
-    maxv = max(values)
-    margin = maxv * 0.15
-    ax.set_xlim(-margin, maxv * 1.15)
-
-    # Precompute renderer and axis bounds once
+    # Precompute renderer and axis bounds
     renderer = fig.canvas.get_renderer()
     bbox = ax.get_window_extent(renderer=renderer)
     axis_height_px = bbox.height
     data_height = ax.get_ylim()[1] - ax.get_ylim()[0]
     px_per_data_unit = axis_height_px / data_height
 
+    # 5. Draw flags (auto‐scale + flip) and annotate values
+    maxv = max(values)
+    margin = maxv * 0.15
+    ax.set_xlim(-margin, maxv * 1.15)
+
     for bar, val, ccy in zip(bars, values, codes):
         y = bar.get_y() + bar.get_height() / 2
 
-        # Auto-scale flag
         flag_code = CURRENCY_TO_COUNTRY.get(ccy)
         if flag_code:
             fp = os.path.join(FLAGS_DIR, f'{flag_code}.png')
             if os.path.isfile(fp):
                 try:
                     img = mpimg.imread(fp)
-                    img_h = img.shape[0]  # pixel height
-                    # Target flag height = 80% of bar thickness in data units
+                    # Flip vertically to correct orientation
+                    img = img[::-1, ...]
+                    img_h = img.shape[0]
                     target_data_h = bar.get_height() * 0.8
                     target_px_h = target_data_h * px_per_data_unit
                     zoom = target_px_h / img_h
@@ -594,10 +595,8 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
         ha, x = ('left', val + maxv * 0.01) if val < maxv * 1.5 else ('right', val - maxv * 0.10)
         color = 'black' if val < maxv * 1.5 else 'white'
         ax.text(
-            x, y,
-            f'{val:,.2f} UZS',
-            va='center', ha=ha,
-            fontsize=10, color=color, fontweight='bold'
+            x, y, f'{val:,.2f} UZS',
+            va='center', ha=ha, fontsize=10, color=color, fontweight='bold'
         )
 
     plt.tight_layout()
@@ -605,6 +604,7 @@ def generate_currency_ranking_chart(rates: dict, ccys: list[str]) -> str:
     plt.savefig(out, dpi=300)
     plt.close(fig)
     return out
+
 
 
 
