@@ -607,29 +607,30 @@ def format_rates_message(rates: dict) -> str:
         "KWD": "🇰🇼 Quvayt dinori",
     }
 
-    # Define grouping order
+    def format_line(code: str) -> str:
+        name = CURRENCY_NAMES.get(code)
+        rate = rates.get(code)
+        if not name or rate is None:
+            return ""
+        display_rate = rate if rate >= 1 else round(rate, 4)
+        formatted_rate = f"{display_rate:.2f}" if display_rate >= 1 else f"{display_rate:.4f}"
+        return f"1 {name.split()[0]} {name.split(' ', 1)[1]} = {formatted_rate} UZS"
+
     major = ["USD", "EUR", "GBP", "CNY", "JPY", "CHF", "KRW", "RUB"]
     regional = ["KZT", "KGS", "TJS", "TMT", "AFN"]
     gulf = ["SAR", "AED", "QAR", "TRY", "IQD", "IRR", "BHD", "KWD"]
 
-    def format_group(group):
-        lines = []
+    lines = []
+    for group in [major, regional, gulf]:
         for code in group:
-            rate = rates.get(code)
-            if rate:
-                formatted = f"{rate:,.2f}".replace(",", "\u202F")  # narrow space
-                lines.append(f"{currency_names[code]} = {formatted} UZS")
-        return "\n".join(lines)
+            line = format_line(code)
+            if line:
+                lines.append(line)
 
-    message = (
-        f"{format_group(major)}\n\n"
-        f"{format_group(regional)}\n\n"
-        f"{format_group(gulf)}\n\n"
-        f"🏦 @markaziy_bank_rates\n"
-        f"🏛 Markaziy Bank sanasi: {datetime.now(ZoneInfo('Asia/Tashkent')).strftime('%Y.%m.%d')}"
-    )
-
-    return message
+    lines.append("")  # spacing
+    lines.append("🏦 @markaziy_bank_rates")
+    lines.append(f"🏛 Markaziy Bank sanasi: {datetime.now(ZoneInfo('Asia/Tashkent')).strftime('%Y.%m.%d')}")
+    return "\n".join(lines)
 
 
 async def send_daily_rates(context: ContextTypes.DEFAULT_TYPE):
