@@ -439,14 +439,14 @@ TZ          = ZoneInfo("Asia/Tashkent")
 CURRENCY_TO_COUNTRY = {
     "USD":"us","EUR":"eu","GBP":"gb","RUB":"ru","CNY":"cn","KRW":"kr","TRY":"tr",
     "TMT":"tm","KZT":"kz","TJS":"tj","KGS":"kg","AED":"ae","JPY":"jp","CHF":"ch",
-    "AFN":"af","SAR":"sa","QAR":"qa","IQD":"iq","IRR":"ir","BHD":"bh","KWD":"kw"
+    "AFN":"af","SAR":"sa","QAR":"qa","IQD":"iq","BHD":"bh","KWD":"kw"
 }
 
 # Display order + local names + emojis
 CCY_LIST = [
     "USD","EUR","GBP","CNY","JPY","CHF","KRW","RUB",
     "KZT","KGS","TJS","TMT","AFN",
-    "SAR","AED","QAR","TRY","IQD","IRR","BHD","KWD"
+    "SAR","AED","QAR","TRY","IQD","BHD","KWD"
 ]
 
 CURRENCY_NAMES = {
@@ -468,7 +468,6 @@ CURRENCY_NAMES = {
     "QAR": "🇶🇦 Qatar riyoli",
     "TRY": "🇹🇷 Turkiya Lira",
     "IQD": "🇮🇶 Iroq dinori",
-    "IRR": "🇮🇷 Eron riali",
     "BHD": "🇧🇭 Bahrayn dinori",
     "KWD": "🇰🇼 Quvayt dinori"
 }
@@ -598,7 +597,7 @@ def format_rates_message(rates: dict) -> str:
 
     major = ["USD", "EUR", "GBP", "CNY", "JPY", "CHF", "KRW", "RUB"]
     regional = ["KZT", "KGS", "TJS", "TMT", "AFN"]
-    gulf = ["SAR", "AED", "QAR", "TRY", "IQD", "IRR", "BHD", "KWD"]
+    gulf = ["SAR", "AED", "QAR", "TRY", "IQD", "BHD", "KWD"]
 
     parts = [
         format_block(major),
