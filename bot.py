@@ -428,7 +428,7 @@ from dotenv import load_dotenv
 # ─── Configuration & Globals ───────────────────────────────────────────────────
 
 load_dotenv()
-BOT_TOKEN   = os.getenv("BOT_TOKEN",   "1974949313:…")
+BOT_TOKEN   = os.getenv("BOT_TOKEN",   "1974949313:AAGAqJpXAz7CRueHjdRiObjZ_-3W23VY5do")
 CHAT_ID     = os.getenv("CHAT_ID",     "-1001861433470")
 ADMIN_ID    = int(os.getenv("ADMIN_ID", "691728393"))
 DB_PATH     = "rates.db"
